@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="BillLocket.Api/BillLocket.Api.csproj" />
+  <Project Path="BillLocket.Application/BillLocket.Application.csproj" />
+  <Project Path="BillLocket.Domain/BillLocket.Domain.csproj" />
+  <Project Path="BillLocket.Infrastructure/BillLocket.Infrastructure.csproj" />
+</Solution>
