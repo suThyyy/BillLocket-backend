@@ -1,5 +1,7 @@
+using System.IdentityModel.Tokens.Jwt;
 using BillLocket.Application.DTOs;
 using BillLocket.Application.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BillLocket.Api.Controllers;
@@ -28,5 +30,42 @@ public sealed class AuthController(IAuthService authService) : ControllerBase
         }
 
         return StatusCode(StatusCodes.Status201Created, result.Response);
+    }
+
+    [HttpPost("login")]
+    [ProducesResponseType<LoginResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<LoginResponse>> Login(
+        [FromBody] LoginRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await authService.LoginAsync(request, cancellationToken);
+
+        if (!result.Succeeded)
+        {
+            return Problem(
+                statusCode: StatusCodes.Status401Unauthorized,
+                title: "Authentication failed",
+                detail: result.Error);
+        }
+
+        return Ok(result.Response);
+    }
+
+    [Authorize]
+    [HttpGet("me")]
+    [ProducesResponseType<MeResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public ActionResult<MeResponse> Me()
+    {
+        var userId = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+        var email = User.FindFirst(JwtRegisteredClaimNames.Email)?.Value;
+
+        if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(email))
+        {
+            return Unauthorized();
+        }
+
+        return Ok(new MeResponse(userId, email));
     }
 }

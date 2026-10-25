@@ -1,11 +1,21 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Text;
 using BillLocket.Application.Interfaces;
+using BillLocket.Infrastructure.Authentication;
 using BillLocket.Infrastructure.Identity;
 using BillLocket.Infrastructure.Persistence;
 using BillLocket.Infrastructure.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
+
+var jwtSection = builder.Configuration.GetRequiredSection(JwtOptions.SectionName);
+var jwtOptions = jwtSection.Get<JwtOptions>()
+    ?? throw new InvalidOperationException("JWT configuration is missing.");
+jwtOptions.Validate();
 
 // Đăng ký DbContext vào Dependency Injection (DI).
 // Sử dụng Entity Framework Core với SQL Server.
@@ -45,6 +55,35 @@ builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ITokenService, JwtTokenService>();
+builder.Services.Configure<JwtOptions>(jwtSection);
+
+builder.Services
+    .AddAuthentication(options =>
+    {
+        // AddIdentity configures its application cookie as the default scheme.
+        // API authorization must explicitly replace both defaults with Bearer.
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(options =>
+    {
+        options.MapInboundClaims = false;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(jwtOptions.Key)),
+            ValidateIssuer = true,
+            ValidIssuer = jwtOptions.Issuer,
+            ValidateAudience = true,
+            ValidAudience = jwtOptions.Audience,
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero,
+            NameClaimType = JwtRegisteredClaimNames.Sub
+        };
+    });
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
@@ -56,6 +95,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
