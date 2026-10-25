@@ -41,6 +41,11 @@ builder.Services
 
         // Yêu cầu email đăng ký phải duy nhất
         options.User.RequireUniqueEmail = true;
+
+        // Khóa tài khoản mới trong 15 phút sau 5 lần đăng nhập sai.
+        options.Lockout.MaxFailedAccessAttempts = 5;
+        options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+        options.Lockout.AllowedForNewUsers = true;
     })
     // Sử dụng EF Core và BillLocketDbContext để lưu dữ liệu Identity
     .AddEntityFrameworkStores<BillLocketDbContext>()

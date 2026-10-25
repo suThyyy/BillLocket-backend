@@ -7,9 +7,11 @@ namespace BillLocket.Infrastructure.Services;
 
 public sealed class AuthService(
     UserManager<ApplicationUser> userManager,
+    SignInManager<ApplicationUser> signInManager,
     ITokenService tokenService) : IAuthService
 {
     private const string InvalidCredentialsMessage = "Invalid email or password.";
+    private const string DuplicateEmailMessage = "Email is already registered.";
 
     public async Task<RegisterResult> RegisterAsync(
         RegisterRequest request,
@@ -40,7 +42,11 @@ public sealed class AuthService(
         if (!identityResult.Succeeded)
         {
             return RegisterResult.Failure(
-                identityResult.Errors.Select(error => error.Description));
+                identityResult.Errors
+                    .Select(error => error.Code is "DuplicateEmail" or "DuplicateUserName"
+                        ? DuplicateEmailMessage
+                        : error.Description)
+                    .Distinct());
         }
 
         return RegisterResult.Success(new RegisterResponse(
@@ -59,7 +65,17 @@ public sealed class AuthService(
 
         var user = await userManager.FindByEmailAsync(request.Email.Trim());
 
-        if (user is null || !await userManager.CheckPasswordAsync(user, request.Password))
+        if (user is null)
+        {
+            return LoginResult.Failure(InvalidCredentialsMessage);
+        }
+
+        var signInResult = await signInManager.CheckPasswordSignInAsync(
+            user,
+            request.Password,
+            lockoutOnFailure: true);
+
+        if (!signInResult.Succeeded)
         {
             return LoginResult.Failure(InvalidCredentialsMessage);
         }
