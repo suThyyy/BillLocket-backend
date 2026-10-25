@@ -1,5 +1,7 @@
+using BillLocket.Application.Interfaces;
 using BillLocket.Infrastructure.Identity;
 using BillLocket.Infrastructure.Persistence;
+using BillLocket.Infrastructure.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -42,6 +44,7 @@ builder.Services
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 var app = builder.Build();
 
