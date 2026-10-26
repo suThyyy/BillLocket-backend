@@ -13,10 +13,14 @@ public sealed class JwtTokenService(IOptions<JwtOptions> options) : ITokenServic
 {
     private readonly JwtOptions _options = ValidateOptions(options.Value);
 
-    public LoginResponse CreateAccessToken(string userId, string email)
+    public LoginResponse CreateAccessToken(
+        string userId,
+        string email,
+        string refreshToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(userId);
         ArgumentException.ThrowIfNullOrWhiteSpace(email);
+        ArgumentException.ThrowIfNullOrWhiteSpace(refreshToken);
 
         var issuedAt = DateTimeOffset.UtcNow;
         var expiresAt = issuedAt.AddMinutes(_options.AccessTokenExpirationMinutes);
@@ -41,7 +45,8 @@ public sealed class JwtTokenService(IOptions<JwtOptions> options) : ITokenServic
         return new LoginResponse(
             new JwtSecurityTokenHandler().WriteToken(token),
             "Bearer",
-            expiresAt);
+            expiresAt,
+            refreshToken);
     }
 
     private static JwtOptions ValidateOptions(JwtOptions options)

@@ -106,4 +106,43 @@ public sealed class AuthController(IAuthService authService) : ControllerBase
             message = "If the account exists and requires verification, a verification email has been sent."
         });
     }
+
+    [HttpPost("refresh")]
+    [ProducesResponseType<LoginResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<LoginResponse>> Refresh(
+        [FromBody] RefreshTokenRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await authService.RefreshAsync(request, cancellationToken);
+
+        if (!result.Succeeded)
+        {
+            return Problem(
+                statusCode: StatusCodes.Status401Unauthorized,
+                title: "Token refresh failed",
+                detail: result.Error);
+        }
+
+        return Ok(result.Response);
+    }
+
+    [Authorize]
+    [HttpPost("logout")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> Logout(
+        [FromBody] LogoutRequest request,
+        CancellationToken cancellationToken)
+    {
+        var userId = User.FindFirst(JwtRegisteredClaimNames.Sub)?.Value;
+
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return Unauthorized();
+        }
+
+        await authService.LogoutAsync(userId, request, cancellationToken);
+        return NoContent();
+    }
 }

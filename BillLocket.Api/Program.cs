@@ -18,6 +18,12 @@ var jwtOptions = jwtSection.Get<JwtOptions>()
     ?? throw new InvalidOperationException("JWT configuration is missing.");
 jwtOptions.Validate();
 
+var refreshTokenSection = builder.Configuration.GetRequiredSection(
+    RefreshTokenOptions.SectionName);
+var refreshTokenOptions = refreshTokenSection.Get<RefreshTokenOptions>()
+    ?? throw new InvalidOperationException("Refresh token configuration is missing.");
+refreshTokenOptions.Validate();
+
 var emailVerificationSection = builder.Configuration.GetRequiredSection(
     EmailVerificationOptions.SectionName);
 var emailVerificationOptions = emailVerificationSection.Get<EmailVerificationOptions>()
@@ -74,8 +80,10 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ITokenService, JwtTokenService>();
+builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
 builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
 builder.Services.Configure<JwtOptions>(jwtSection);
+builder.Services.Configure<RefreshTokenOptions>(refreshTokenSection);
 builder.Services.Configure<EmailVerificationOptions>(emailVerificationSection);
 builder.Services.Configure<SmtpOptions>(smtpSection);
 

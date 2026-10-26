@@ -17,9 +17,11 @@ public sealed class AuthService(
     ITokenService tokenService,
     IEmailSender emailSender,
     IOptions<EmailVerificationOptions> emailVerificationOptions,
+    IRefreshTokenService refreshTokenService,
     ILogger<AuthService> logger) : IAuthService
 {
     private const string InvalidCredentialsMessage = "Invalid email or password.";
+    private const string InvalidRefreshTokenMessage = "Invalid refresh token.";
     private const string DuplicateEmailMessage = "Email is already registered.";
     private readonly EmailVerificationOptions _emailVerificationOptions =
         ValidateEmailVerificationOptions(emailVerificationOptions.Value);
@@ -93,8 +95,15 @@ public sealed class AuthService(
             return LoginResult.Failure(InvalidCredentialsMessage);
         }
 
-        return LoginResult.Success(
-            tokenService.CreateAccessToken(user.Id, user.Email!));
+        var refreshToken = await refreshTokenService.CreateAsync(
+            user.Id,
+            cancellationToken);
+        await refreshTokenService.SaveChangesAsync(cancellationToken);
+
+        return LoginResult.Success(tokenService.CreateAccessToken(
+            user.Id,
+            user.Email!,
+            refreshToken.RawToken));
     }
 
     public async Task<bool> ConfirmEmailAsync(
@@ -156,6 +165,41 @@ public sealed class AuthService(
                 "Failed to resend verification email for user {UserId}.",
                 user.Id);
         }
+    }
+
+    public async Task<LoginResult> RefreshAsync(
+        RefreshTokenRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var rotation = await refreshTokenService.RotateAsync(
+            request.RefreshToken,
+            cancellationToken);
+
+        if (!rotation.Succeeded)
+        {
+            return LoginResult.Failure(InvalidRefreshTokenMessage);
+        }
+
+        return LoginResult.Success(tokenService.CreateAccessToken(
+            rotation.UserId!,
+            rotation.Email!,
+            rotation.RefreshToken!));
+    }
+
+    public Task<bool> LogoutAsync(
+        string userId,
+        LogoutRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        return refreshTokenService.RevokeFamilyForUserAsync(
+            request.RefreshToken,
+            userId,
+            cancellationToken);
     }
 
     private async Task SendVerificationEmailAsync(

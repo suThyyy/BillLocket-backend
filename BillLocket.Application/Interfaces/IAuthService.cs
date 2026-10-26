@@ -20,4 +20,13 @@ public interface IAuthService
     Task ResendVerificationAsync(
         string email,
         CancellationToken cancellationToken = default);
+
+    Task<LoginResult> RefreshAsync(
+        RefreshTokenRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task<bool> LogoutAsync(
+        string userId,
+        LogoutRequest request,
+        CancellationToken cancellationToken = default);
 }
