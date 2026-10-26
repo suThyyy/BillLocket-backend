@@ -11,4 +11,13 @@ public interface IAuthService
     Task<LoginResult> LoginAsync(
         LoginRequest request,
         CancellationToken cancellationToken = default);
+
+    Task<bool> ConfirmEmailAsync(
+        string userId,
+        string token,
+        CancellationToken cancellationToken = default);
+
+    Task ResendVerificationAsync(
+        string email,
+        CancellationToken cancellationToken = default);
 }

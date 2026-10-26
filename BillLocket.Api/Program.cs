@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using BillLocket.Application.Interfaces;
 using BillLocket.Infrastructure.Authentication;
+using BillLocket.Infrastructure.Email;
 using BillLocket.Infrastructure.Identity;
 using BillLocket.Infrastructure.Persistence;
 using BillLocket.Infrastructure.Services;
@@ -16,6 +17,17 @@ var jwtSection = builder.Configuration.GetRequiredSection(JwtOptions.SectionName
 var jwtOptions = jwtSection.Get<JwtOptions>()
     ?? throw new InvalidOperationException("JWT configuration is missing.");
 jwtOptions.Validate();
+
+var emailVerificationSection = builder.Configuration.GetRequiredSection(
+    EmailVerificationOptions.SectionName);
+var emailVerificationOptions = emailVerificationSection.Get<EmailVerificationOptions>()
+    ?? throw new InvalidOperationException("Email verification configuration is missing.");
+emailVerificationOptions.Validate();
+
+var smtpSection = builder.Configuration.GetRequiredSection(SmtpOptions.SectionName);
+var smtpOptions = smtpSection.Get<SmtpOptions>()
+    ?? throw new InvalidOperationException("SMTP configuration is missing.");
+smtpOptions.Validate();
 
 // Đăng ký DbContext vào Dependency Injection (DI).
 // Sử dụng Entity Framework Core với SQL Server.
@@ -41,6 +53,7 @@ builder.Services
 
         // Yêu cầu email đăng ký phải duy nhất
         options.User.RequireUniqueEmail = true;
+        options.SignIn.RequireConfirmedEmail = true;
 
         // Khóa tài khoản mới trong 15 phút sau 5 lần đăng nhập sai.
         options.Lockout.MaxFailedAccessAttempts = 5;
@@ -61,7 +74,10 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ITokenService, JwtTokenService>();
+builder.Services.AddScoped<IEmailSender, SmtpEmailSender>();
 builder.Services.Configure<JwtOptions>(jwtSection);
+builder.Services.Configure<EmailVerificationOptions>(emailVerificationSection);
+builder.Services.Configure<SmtpOptions>(smtpSection);
 
 builder.Services
     .AddAuthentication(options =>
