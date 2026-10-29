@@ -11,5 +11,7 @@ namespace BillLocket.Infrastructure.Identity
 
         public DateTimeOffset CreatedAt { get; set; }
             = DateTimeOffset.UtcNow;
+
+        public DateTimeOffset? UsernameChangedAt { get; set; }
     }
 }
