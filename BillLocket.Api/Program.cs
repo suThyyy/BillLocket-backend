@@ -89,6 +89,7 @@ builder.Services.Configure<JwtOptions>(jwtSection);
 builder.Services.Configure<RefreshTokenOptions>(refreshTokenSection);
 builder.Services.Configure<EmailVerificationOptions>(emailVerificationSection);
 builder.Services.Configure<SmtpOptions>(smtpSection);
+builder.Services.AddScoped<IUserService, UserService>();
 
 builder.Services
     .AddAuthentication(options =>
