@@ -134,17 +134,28 @@ namespace BillLocket.Domain.Entities
         }
 
         private static void ValidateUsers(
-            string requesterId,
-            string addresseeId)
+     string requesterId,
+     string addresseeId)
         {
             if (string.IsNullOrWhiteSpace(requesterId) ||
                 string.IsNullOrWhiteSpace(addresseeId))
+            {
                 throw new ArgumentException(
                     "User IDs are required.");
+            }
+
+            if (!IsCanonicalGuid(requesterId) ||
+                !IsCanonicalGuid(addresseeId))
+            {
+                throw new ArgumentException(
+                    "User IDs must be canonical GUID strings.");
+            }
 
             if (requesterId == addresseeId)
+            {
                 throw new InvalidOperationException(
                     "Cannot send a friend request to yourself.");
+            }
         }
 
         private static (string LowId, string HighId) NormalizePair(
@@ -154,6 +165,15 @@ namespace BillLocket.Domain.Entities
             return string.CompareOrdinal(firstId, secondId) < 0
                 ? (firstId, secondId)
                 : (secondId, firstId);
+        }
+
+        private static bool IsCanonicalGuid(string value)
+        {
+            return Guid.TryParseExact(value, "D", out var guid)
+                && string.Equals(
+                    value,
+                    guid.ToString("D"),
+                    StringComparison.Ordinal);
         }
     }
 }
