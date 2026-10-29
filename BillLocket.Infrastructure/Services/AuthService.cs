@@ -35,6 +35,7 @@ public sealed class AuthService(
 
         var email = request.Email.Trim();
         var displayName = request.DisplayName.Trim();
+        var userName = request.UserName.Trim();
 
         if (string.IsNullOrWhiteSpace(displayName))
         {
@@ -43,7 +44,7 @@ public sealed class AuthService(
 
         var user = new ApplicationUser
         {
-            UserName = email,
+            UserName = userName,
             Email = email,
             DisplayName = displayName
         };
@@ -56,9 +57,12 @@ public sealed class AuthService(
         {
             return RegisterResult.Failure(
                 identityResult.Errors
-                    .Select(error => error.Code is "DuplicateEmail" or "DuplicateUserName"
-                        ? DuplicateEmailMessage
-                        : error.Description)
+                    .Select(error => error.Code switch
+                    {
+                        "DuplicateEmail" => "Email is already registered.",
+                        "DuplicateUserName" => "Username is already taken.",
+                        _ => error.Description
+                    })
                     .Distinct());
         }
 
@@ -66,6 +70,7 @@ public sealed class AuthService(
 
         return RegisterResult.Success(new RegisterResponse(
             user.Id,
+            user.UserName!,
             user.Email!,
             user.DisplayName,
             user.CreatedAt));

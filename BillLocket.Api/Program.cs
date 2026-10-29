@@ -65,6 +65,9 @@ builder.Services
         options.Lockout.MaxFailedAccessAttempts = 5;
         options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
         options.Lockout.AllowedForNewUsers = true;
+
+        // Chính sách đặt tên chỉ chấp nhận Username gồm các ký tự đã quy định
+        options.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyz0123456789_";
     })
     // Sử dụng EF Core và BillLocketDbContext để lưu dữ liệu Identity
     .AddEntityFrameworkStores<BillLocketDbContext>()
