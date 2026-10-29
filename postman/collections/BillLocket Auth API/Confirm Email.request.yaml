@@ -1,0 +1,12 @@
+$kind: http-request
+name: Confirm Email
+order: 4000
+method: GET
+url: '{{base_url}}/api/v1/auth/confirm-email?userId=&token='
+queryParams:
+  - key: userId
+    value: ''
+    description: The user ID from the verification email
+  - key: token
+    value: ''
+    description: The email confirmation token from the verification email

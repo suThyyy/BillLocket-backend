@@ -1,0 +1,10 @@
+$kind: http-request
+url: "{{base_url}}/api/v1/users/me/username"
+method: PATCH
+body:
+  type: json
+  content: |-
+    {
+      "username": "suthy_new01"
+    }
+order: 8000

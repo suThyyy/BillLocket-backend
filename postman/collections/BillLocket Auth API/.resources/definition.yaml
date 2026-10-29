@@ -1,0 +1,17 @@
+$kind: collection
+description: |-
+  Authentication API for the BillLocket Backend.
+  Base route: api/v1/auth
+
+  Covers user registration, login, email verification, token refresh, and logout.
+variables:
+  base_url: http://localhost:5087
+  access_token: ""
+  refresh_token: ""
+  test_password: ""
+auth:
+  - id: 8fc7cbe0-a20c-4c96-98fb-8978f798df9b
+    type: bearer
+    name: Bearer Token
+    credentials:
+      token: "{{access_token}}"

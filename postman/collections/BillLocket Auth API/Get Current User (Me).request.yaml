@@ -1,0 +1,8 @@
+$kind: http-request
+order: 3000
+method: GET
+url: "{{base_url}}/api/v1/auth/me"
+auth:
+  type: inherit
+  credentials:
+    id: 8fc7cbe0-a20c-4c96-98fb-8978f798df9b
