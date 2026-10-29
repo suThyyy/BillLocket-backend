@@ -1,6 +1,7 @@
 <Solution>
   <Project Path="BillLocket.Api/BillLocket.Api.csproj" />
   <Project Path="BillLocket.Application/BillLocket.Application.csproj" />
+  <Project Path="BillLocket.Domain.Tests/BillLocket.Domain.Tests.csproj" Id="cc672ee8-4382-4423-b85f-8628495a5a62" />
   <Project Path="BillLocket.Domain/BillLocket.Domain.csproj" />
   <Project Path="BillLocket.Infrastructure/BillLocket.Infrastructure.csproj" />
 </Solution>
